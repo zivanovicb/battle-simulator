@@ -71,6 +71,29 @@ const getNumOfUnits = async (i, getNumOfUnits, numOfArmies, numOfUnits) => {
   }
 };
 
+// Gets called recursively if input is wrong
+const getStrategy = async (i, getStrategy, numOfArmies, strategyNumber) => {
+  let finalStrategyNumber;
+
+  if (strategyNumber === undefined) {
+    // Gets user input from terminal
+    finalStrategyNumber = await rlp.questionAsync(
+      `Army ${i}/${numOfArmies} - Please choose strategy (1. Strongest / 2. Weakest / 3. Random): `
+    );
+    // finalStrategyNumber will be defined in test cases
+  } else finalStrategyNumber = strategyNumber;
+
+  finalStrategyNumber = parseInt(finalStrategyNumber, 10);
+
+  try {
+    return parseStrategyNum(finalStrategyNumber);
+  } catch (err) {
+    console.log(`Error: ${err.message}. Please try again!`);
+    // Recursion
+    return getStrategy(i, getStrategy, numOfArmies);
+  }
+};
+
 const parseNumOfArmies = numOfArmies => {
   numOfArmies = parseInt(numOfArmies);
 
@@ -109,11 +132,29 @@ const parseNumOfUnits = numOfUnits => {
   return numOfUnits;
 };
 
+const parseStrategyNum = strategyNum => {
+  strategyNum = parseInt(strategyNum, 10);
+
+  if (isNaN(strategyNum)) {
+    throw new Error("You must enter the number");
+  }
+
+  if (strategyNum !== 1 && strategyNum !== 2 && strategyNum !== 3) {
+    throw new Error(
+      `Wrong number(${strategyNum}). You can choose between 1 - strongest, 2 - weakest, 3 - random`
+    );
+  }
+
+  return strategyNum;
+};
+
 module.exports = {
   parseNumOfArmies,
   parseNumOfSquads,
   parseNumOfUnits,
+  parseStrategyNum,
   getNumOfArmies,
   getNumOfSquads,
-  getNumOfUnits
+  getNumOfUnits,
+  getStrategy
 };
