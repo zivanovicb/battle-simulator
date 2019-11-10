@@ -4,6 +4,9 @@ const {
   getNumOfUnits,
   getStrategy
 } = require("./helpers/battleInput");
+const Army = require("./models/Army");
+
+const { createSquads } = require("./helpers/factories");
 
 async function main() {
   const numOfArmies = await getNumOfArmies(getNumOfArmies);
@@ -16,14 +19,10 @@ async function main() {
 
     armies = {
       ...armies,
-      [i]: {
-        name: `Army No.${i}`,
-        numOfSquads,
-        numOfUnits,
-        strategy
-      }
+      [i]: new Army(createSquads(numOfSquads, numOfUnits), `Army No.${i}`, strategy)
     };
-    console.log("[main]", { armies });
+
+    console.log("armies", { armies });
   }
 }
 

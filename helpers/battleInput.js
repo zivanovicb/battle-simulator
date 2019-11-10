@@ -6,7 +6,7 @@ const rlp = readline.createInterface({
   terminal: false
 });
 
-// Gets called recursively if input is wrong
+// Gets input from stdin, does validation and gets called recursively if input is wrong
 const getNumOfArmies = async (getNumOfArmies, numOfArmies) => {
   let finalNumOfArmies;
   if (numOfArmies === undefined) {
@@ -26,7 +26,7 @@ const getNumOfArmies = async (getNumOfArmies, numOfArmies) => {
   }
 };
 
-// Gets called recursively if input is wrong
+// Gets input from stdin, does validation and gets called recursively if input is wrong
 const getNumOfSquads = async (i, getNumOfSquads, numOfArmies, numOfSquads) => {
   let finalNumOfSquads;
 
@@ -48,7 +48,7 @@ const getNumOfSquads = async (i, getNumOfSquads, numOfArmies, numOfSquads) => {
   }
 };
 
-// Gets called recursively if input is wrong
+// Gets input from stdin, does validation and gets called recursively if input is wrong
 const getNumOfUnits = async (i, getNumOfUnits, numOfArmies, numOfUnits) => {
   let finalNumOfUnits;
 
@@ -71,7 +71,7 @@ const getNumOfUnits = async (i, getNumOfUnits, numOfArmies, numOfUnits) => {
   }
 };
 
-// Gets called recursively if input is wrong
+// Gets input from stdin, does validation and gets called recursively if input is wrong
 const getStrategy = async (i, getStrategy, numOfArmies, strategyNumber) => {
   let finalStrategyNumber;
 
