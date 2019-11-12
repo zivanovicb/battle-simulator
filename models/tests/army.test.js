@@ -1,33 +1,44 @@
 const Army = require("../army");
-const Squad = require("../squad");
-const { createSquads } = require("../../helpers/factories");
+const { ERR_NUM_OF_SQUADS, ERR_NUM_OF_UNITS, ERR_STRATEGY_NUM } = require("../../constants");
 
 describe("ArmyModel", () => {
-  test("should throw if squads are not array", () => {
-    expect(() => new Army("wrongType", "random", 1)).toThrow();
-  });
+  test("constructor param validation", () => {
+    expect(() => new Army(1, 1, 5, "rnd", 1)).toThrowError(ERR_NUM_OF_SQUADS);
 
-  test("should throw if squads are not squad objects", () => {
-    expect(() => new Army([...createSquads(2, 5), "wrongType"])).toThrow();
-  });
+    expect(() => new Army(1, 3, 4, "rnd", 1)).toThrowError(ERR_NUM_OF_UNITS);
+    expect(() => new Army(1, 3, 11, "rnd", 6)).toThrowError(ERR_NUM_OF_UNITS);
 
-  test("should throw if less than 2 squads", () => {
-    expect(() => new Army(createSquads(1, 6))).toThrow();
+    expect(() => new Army(1, 3, 5, "rnd", 6)).toThrowError(ERR_STRATEGY_NUM);
+
+    expect(() => new Army(1, 3, 5, "rnd", 2)).not.toThrow();
+    expect(() => new Army(1, 3, 10, "rnd", 3)).not.toThrow();
   });
 
   test("should be able to instanciate", () => {
-    expect(() => {
-      const name = "Army No.1";
-      const strategyNum = 1;
-      const squadsNum = 3;
-      const unitsNum = 6;
+    const id = 1;
+    const name = "Army No.1";
+    const strategyNum = 1;
+    const squadsNum = 3;
+    const unitsNum = 6;
 
-      const a = new Army(createSquads(squadsNum, unitsNum), name, strategyNum);
+    const a = new Army(id, squadsNum, unitsNum, name, strategyNum);
 
-      expect(a.squads.length).toBe(squadsNum);
-      expect(a.name).toBe(name);
-      expect(a.strategy).toBe(strategyNum);
-    }).not.toThrow();
+    expect(a.id).toBe(id);
+    expect(a.squads.length).toBe(squadsNum);
+    expect(a.name).toBe(name);
+    expect(a.strategy).toBe(strategyNum);
+  });
+
+  test("can create list of squads", () => {
+    const name = "Army No.1";
+    const strategyNum = 1;
+    const squadsNum = 3;
+    const unitsNum = 6;
+
+    const a = new Army(1, squadsNum, unitsNum, name, strategyNum);
+    a.createSquads(squadsNum, unitsNum);
+    expect(a.squads.length).toBe(squadsNum);
+    expect(a.squads[0].units.length).toBe(unitsNum);
   });
 
   test("getStrategy returns right title for strategy", () => {
@@ -36,10 +47,7 @@ describe("ArmyModel", () => {
     const squadsNum = 3;
     const unitsNum = 6;
 
-    const a = new Army(createSquads(squadsNum, unitsNum), name, strategyNum);
-    expect(a.getStrategy(1)).toBe("strongest");
-    expect(a.getStrategy(2)).toBe("weakest");
-    expect(a.getStrategy(3)).toBe("random");
+    const a = new Army(1, squadsNum, unitsNum, name, strategyNum);
     expect(a.getStrategy()).toBe("strongest");
   });
 });

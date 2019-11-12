@@ -5,6 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "faker": "^4.1.0",
+    "nanoid": "^2.1.6",
     "readline-promise": "^1.0.4",
     "sinon": "^7.5.0"
   },

@@ -1,92 +1,97 @@
 const sinon = require("sinon");
 const Vehicle = require("../vehicle");
 const Soldier = require("../soldier");
-const gavg = require("../../helpers/gavg");
+const {
+  ERR_VEHICLE_RECHARGE_AMOUNT,
+  ERR_NUM_OF_OPERATORS_PER_VEHICLE
+} = require("../../constants");
+
+// manually create and restore the sandbox
+let sandbox;
 
 describe("VehicleModel", () => {
-  test("throws if recharge is equal or less than 1000(ms)", () => {
-    expect(() => new Vehicle(30, 800, new Soldier(100, 900, 30))).toThrow();
-    expect(() => new Vehicle(30, 800, new Soldier(100, 1000, 30))).toThrow();
+  beforeEach(function() {
+    sandbox = sinon.createSandbox();
+  });
+
+  afterEach(function() {
+    sandbox.restore();
+  });
+
+  test("constructor param validation", () => {
+    expect(() => new Vehicle(100, 900, 2)).toThrowError(ERR_VEHICLE_RECHARGE_AMOUNT);
+    expect(() => new Vehicle(30, 1001, 0)).toThrowError(ERR_NUM_OF_OPERATORS_PER_VEHICLE);
   });
 
   test("can be instanciated", () => {
-    const s1 = new Soldier(30, 1100, 30);
-    const v = new Vehicle(100, 1200, [s1]);
+    const v = new Vehicle(100, 1100, 2);
 
     expect(v.health).toBe(100);
-    expect(v.totalHealth).toBe(v.getTotalHealth());
-    expect(v.operators.length).toBe(1);
+    expect(v.recharge).toBe(1100);
+    expect(v.operators.length).toBe(2);
   });
 
-  test("getTotalHealth computes right amount of total health for a vehicle(average of vehicle health + all operators health)", () => {
-    const s1 = new Soldier(30, 1100, 30);
-    const s2 = new Soldier(50, 1100, 30);
-    const s3 = new Soldier(40, 1100, 30);
+  /* 
+    The total damage inflicted on the vehicle is distributed to the operators as follows: 30% of the total
+    damage is inflicted on the vehicle, 50% of the total damage is inflicted on a single random vehicle
+    perator. 
+    The rest of the damage is inflicted evenly to the other operators. If there are no additional vehicle
+    operators, the rest of the damage is applied to the vehicle.
+  */
 
-    const v = new Vehicle(100, 1200, [s1, s2, s3]);
+  test("receiveDamage properly distributes dmg to the vehicle, single random operator and the rest to the vehicle", () => {
+    const v1 = new Vehicle(100, 1200, 5);
+    const s1 = new Soldier(100, 500, 50);
 
-    // 30 + 50 + 40 + 100 / 4
-    expect(v.getTotalHealth()).toBe(220 / 4);
+    v1.operators = [s1];
+
+    v1.receiveDamage(2);
+
+    // initial 30% on vehicle, and then %20 because there is only one operator in the vehicle
+    expect(v1.health).toBe(100 - 0.6 - 0.4);
+    expect(v1.operators[0].health).toBe(100 - 1);
   });
 
-  test("getTotalHealth returns false if vehicle's total health is 0 or less", () => {
-    const s1 = new Soldier(30, 1100, 30);
-    const s2 = new Soldier(50, 1100, 30);
-    const s3 = new Soldier(40, 1100, 30);
+  test("receiveDamage properly distributes dmg to the vehicle, single random operator and the rest evenly to operators", () => {
+    sandbox.stub(Math, "random").returns(1);
+    const v1 = new Vehicle(100, 1200, 5);
+    const s1 = new Soldier(100, 500, 50);
+    const s2 = new Soldier(80, 500, 50);
+    const s3 = new Soldier(60, 500, 50);
 
-    const v = new Vehicle(100, 1200, [s1, s2, s3]);
+    v1.operators = [s1, s2, s3];
 
-    // 30 + 50 + 40 + 100 / 4
-    expect(v.getTotalHealth()).toBe(220 / 4);
+    v1.receiveDamage(2);
+
+    // initial 30% on vehicle
+    expect(v1.health).toBe(100 - 0.6);
+    expect(v1.operators[1].health).toBe(79);
   });
 
-  test("getDamage computers right amount of damage a vehicle could possibly deal", () => {
-    const e1 = 30;
-    const e2 = 50;
-    const e3 = 40;
+  test("isActive returns false true only if there are operators with health > 0 and vehicle health > 0", () => {
+    const v1 = new Vehicle(100, 1200, 5);
+    const v2 = new Vehicle(0, 1200, 5);
+    const v3 = new Vehicle(100, 1200, 5);
 
-    const s1 = new Soldier(30, 1100, e1);
-    const s2 = new Soldier(50, 1100, e2);
-    const s3 = new Soldier(40, 1100, e3);
+    const s1 = new Soldier(0, 500, 50);
+    const s2 = new Soldier(0, 500, 50);
+    const s3 = new Soldier(0, 500, 50);
 
-    const v = new Vehicle(100, 1200, [s1, s2, s3]);
+    const s4 = new Soldier(100, 500, 50);
+    const s5 = new Soldier(100, 500, 50);
+    const s6 = new Soldier(100, 500, 50);
 
-    // 0.1 + sum(operators.experience / 100)
-    expect(v.getDamage()).toBe(1.3000000000000003);
-  });
+    const s7 = new Soldier(100, 500, 50);
+    const s8 = new Soldier(100, 500, 50);
+    const s9 = new Soldier(100, 500, 50);
 
-  test("getAttackSuccessProbability computers right amount of attack success probability", () => {
-    const s1 = new Soldier(60, 1100, 45);
-    const s2 = new Soldier(30, 1100, 20);
-
-    const v1 = new Vehicle(50, 1250, [s1, s2]);
-
-    sinon.stub(Math, "random").returns(4);
-
-    // 0.5 * (1 + this.health / 100) * gavg(operatorsSuccessRates);
-    expect(v1.getAttackSuccessProbability()).toBe(0.021633307652783935);
-  });
-
-  test("isActive returns true if there is a vehicle operator with health > 0 && vehicle itself has > 0 health", () => {
-    const s1 = new Soldier(60, 1100, 45);
-    const s2 = new Soldier(30, 1100, 20);
-
-    const v1 = new Vehicle(50, 1250, [s1, s2]);
-
-    expect(v1.isActive()).toBe(true);
-  });
-
-  test("isActive returns false if vehicle health is 0 or there are no operators with health more than 0", () => {
-    const s1 = new Soldier(0, 1000, 30);
-    const s2 = new Soldier(0, 1000, 30);
-
-    const s3 = new Soldier(100, 1000, 30);
-    const s4 = new Soldier(80, 1000, 30);
-
-    const v1 = new Vehicle(20, 1500, [s1, s2]);
+    v1.operators = [s1, s2, s3];
     expect(v1.isActive()).toBe(false);
 
-    const v2 = new Vehicle(0, 1500, [s3, s4]);
-    expect(v1.isActive()).toBe(false);
+    v2.operators = [s4, s5, s6];
+    expect(v2.isActive()).toBe(false);
+
+    v3.operators = [s7, s8, s9];
+    expect(v3.isActive()).toBe(true);
   });
 });

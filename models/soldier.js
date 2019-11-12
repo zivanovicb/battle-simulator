@@ -1,11 +1,14 @@
 const Unit = require("./unit");
+const { ERR_EXPERIENCE_AMOUNT } = require("../constants");
 
 class Soldier extends Unit {
   constructor(health, recharge, experience) {
-    super(health, recharge);
     if (experience < 0 || experience > 50) {
-      throw new Error("Health should be a number between 0 and 50");
+      throw new Error(ERR_EXPERIENCE_AMOUNT);
     }
+
+    super(health, recharge);
+
     this.experience = experience;
   }
 

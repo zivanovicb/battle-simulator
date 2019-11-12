@@ -1,37 +1,46 @@
 const Squad = require("./squad");
+const { parseStrategy } = require("../helpers/parse");
+const { ERR_NUM_OF_SQUADS, ERR_NUM_OF_UNITS, ERR_STRATEGY_NUM } = require("../constants");
 
 class Army {
-  constructor(squads, name, strategyNum) {
-    if (!Array.isArray(squads)) {
-      throw new Error("Squads parameter should be an array of Squad objects");
+  constructor(id, numOfSquads, numOfUnits, name, strategyNum) {
+    if (numOfSquads < 2) {
+      throw new Error(ERR_NUM_OF_SQUADS);
     }
 
-    if (squads.filter(u => !(u instanceof Squad)).length > 0) {
-      throw new Error("Squads parameter should be an array of Squad objects");
+    if (numOfUnits < 5 || numOfUnits > 10) {
+      throw new Error(ERR_NUM_OF_UNITS);
     }
 
-    if (squads.length < 2) {
-      console.log("AM I THROWINGNGNNGNG???");
-      throw new Error("Wrong number. There should be at least two squads in army");
+    if (strategyNum !== 1 && strategyNum !== 2 && strategyNum !== 3) {
+      throw new Error(ERR_STRATEGY_NUM);
     }
 
-    // List of squad objects
-    this.squads = squads;
+    this.id = id;
     this.name = name;
     this.strategy = strategyNum;
+
+    // List of squad objects
+    this.squads = this.createSquads(numOfSquads, numOfUnits);
+
+    // A function you give a strategy num(1/2/3) and spits out a strategy title
+    this.getStrategy = parseStrategy.bind(undefined, this.strategy);
+    this.joinBattle = this.joinBattle.bind(this);
   }
 
-  getStrategy(strategyNum) {
-    switch (strategyNum) {
-      case 1:
-        return "strongest";
-      case 2:
-        return "weakest";
-      case 3:
-        return "random";
-      default:
-        return "strongest";
-    }
+  createSquads(numOfSquads, numOfUnits) {
+    let squads = [];
+    for (let i = 0; i < numOfSquads; i++) squads.push(new Squad(numOfUnits, this.strategy));
+    return squads;
+  }
+
+  joinBattle(armies) {
+    console.log("[joinBattle]", { armies });
+    const enemySquads = armies
+      .filter(a => a.id !== this.id)
+      .reduce((acc, a) => [...acc, ...a.squads], []);
+    console.log("[joinBattle]", { enemySquads });
+    this.squads.forEach(s => s.startFighting(enemySquads));
   }
 }
 

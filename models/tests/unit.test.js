@@ -1,5 +1,7 @@
 const Unit = require("../unit");
 
+jest.useFakeTimers();
+
 describe("UnitModel", () => {
   test("should throw if unit health is less than 0", () => {
     expect(() => new Unit(-1, 1000)).toThrow();
@@ -19,5 +21,23 @@ describe("UnitModel", () => {
   test("should return true if health is more than 0", () => {
     const u = new Unit(20, 1000);
     expect(u.isActive()).toBe(true);
+  });
+
+  test("receiveDamage should health by 20", () => {
+    const u = new Unit(50, 1000);
+    u.receiveDamage(20);
+    expect(u.health).toBe(30);
+  });
+
+  test("can recharge", () => {
+    const u = new Unit(50, 1000);
+    expect(u.isReady).toBe(true);
+
+    u.rechargeForNextAttack();
+    expect(u.isReady).toBe(false);
+
+    expect(setTimeout).toHaveBeenCalledTimes(1);
+    jest.runOnlyPendingTimers();
+    expect(u.isReady).toBe(true);
   });
 });
