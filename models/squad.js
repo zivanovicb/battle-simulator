@@ -50,11 +50,11 @@ class Squad {
   }
 
   static createVehicle(squadName) {
-    return new Vehicle(rnd(1, 10), rnd(1001, 2000), rnd(1, 3), squadName);
+    return new Vehicle(rnd(1, 100), rnd(1001, 2000), rnd(1, 3), squadName);
   }
 
   static createSoldier(squadName) {
-    return new Soldier(rnd(0, 3), rnd(100, 2000), rnd(0, 50), squadName);
+    return new Soldier(rnd(1, 100), rnd(100, 2000), rnd(0, 50), squadName);
   }
 
   static getPoints(s) {

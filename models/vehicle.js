@@ -29,7 +29,7 @@ class Vehicle extends Unit {
   createOperators(numOfOperators) {
     const operators = [];
     for (let i = 0; i < numOfOperators; i++)
-      operators.push(new Soldier(rnd(0, 4), rnd(100, 2000), rnd(0, 50), this.squadName));
+      operators.push(new Soldier(rnd(1, 100), rnd(100, 2000), rnd(0, 50), this.squadName));
 
     return operators;
   }

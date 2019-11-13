@@ -17,6 +17,6 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "jest test --coverage"
+    "test": "jest test --silent --coverage"
   }
 }

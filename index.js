@@ -15,7 +15,7 @@ async function main() {
     const armyFightingPromises = [];
     armies.forEach(a => armyFightingPromises.push(a.joinBattle(armies)));
 
-    console.log("`=======> SIMULATION STARTS NOW <========");
+    console.log("========> SIMULATION STARTS NOW <========");
     await Promise.all(armyFightingPromises);
     console.log("========> SIMULATION IS OVER <========");
 
