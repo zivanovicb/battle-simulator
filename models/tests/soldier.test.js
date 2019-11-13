@@ -33,7 +33,7 @@ describe("SoldierModel", () => {
 
   test("getDamage computes right amount of damage a soldier can afflict", () => {
     const s = new Soldier(5, 1200, 30);
-    expect(s.getDamage()).toBe(0.05 + s.experience / 100);
+    expect(s.getDamage("randomSquadName")).toBe(0.05 + s.experience / 100);
   });
 
   test("getAttackSuccessProbability computes attackSuccessProbability", () => {

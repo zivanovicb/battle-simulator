@@ -42,11 +42,12 @@ class Unit {
   }
 
   receiveDamage(dmg) {
-    console.log(
-      `===> Squad(${this.squadName}): ${this.type} (${this.name}) received ${dmg} damage!`
-    );
+    if (this.health <= 0) return;
     const hasJustDied = this.hasJustDied(this.health, dmg);
     this.health = hasJustDied ? 0 : this.health - dmg;
+    console.log(
+      `===> Squad(${this.squadName}): ${this.type} (${this.name}) received ${dmg} damage. ${this.health} health left!`
+    );
   }
 }
 

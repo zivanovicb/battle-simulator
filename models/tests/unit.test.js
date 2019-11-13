@@ -45,5 +45,9 @@ describe("UnitModel", () => {
     const u1 = new Unit(0.5, 1000);
     u1.receiveDamage(5);
     expect(u1.health).toBe(0);
+
+    const u2 = new Unit(0, 1000);
+    u2.receiveDamage(5);
+    expect(u1.health).toBe(0);
   });
 });
