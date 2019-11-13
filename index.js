@@ -6,13 +6,30 @@ const {
 } = require("./helpers/battleInput");
 const Army = require("./models/Army");
 
-const { createSquads } = require("./helpers/factories");
-
 async function main() {
   const numOfArmies = await getNumOfArmies(getNumOfArmies);
   try {
     const armies = await initArmies(numOfArmies);
-    armies.forEach(a => a.joinBattle(armies));
+
+    // A fighting promise resolves once all squads get destroyed or there are no enemy squads left
+    const armyFightingPromises = [];
+    armies.forEach(a => armyFightingPromises.push(a.joinBattle(armies)));
+
+    console.log("`=======> SIMULATION STARTS NOW <========");
+    await Promise.all(armyFightingPromises);
+    console.log("========> SIMULATION IS OVER <========");
+
+    const winner = armies
+      .reduce((acc, a) => {
+        const activeSquadsLength = a.squads.filter(sq => sq.isActive()).length;
+        return [...acc, { ...a, hasActiveSquads: activeSquadsLength > 0, activeSquadsLength }];
+      }, [])
+      .filter(a => a.hasActiveSquads)[0];
+
+    console.log(
+      `========> THE WINNER IS ${winner.name} with ${winner.activeSquadsLength} active squads left <========`
+    );
+    process.exit();
   } catch (err) {
     console.log("[main.err]", err.message);
   }

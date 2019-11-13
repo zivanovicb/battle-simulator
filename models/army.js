@@ -35,12 +35,15 @@ class Army {
   }
 
   joinBattle(armies) {
-    console.log("[joinBattle]", { armies });
-    const enemySquads = armies
-      .filter(a => a.id !== this.id)
-      .reduce((acc, a) => [...acc, ...a.squads], []);
-    console.log("[joinBattle]", { enemySquads });
-    this.squads.forEach(s => s.startFighting(enemySquads));
+    return new Promise(async (resolve, _) => {
+      const enemySquads = armies
+        .filter(a => a.id !== this.id)
+        .reduce((acc, a) => [...acc, ...a.squads], []);
+      const squadFightingPromises = [];
+      this.squads.forEach(sq => squadFightingPromises.push(sq.fight(enemySquads)));
+      await Promise.all(squadFightingPromises);
+      resolve();
+    });
   }
 }
 

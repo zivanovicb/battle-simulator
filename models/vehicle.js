@@ -5,17 +5,16 @@ const { rnd } = require("../helpers/factories");
 const { ERR_VEHICLE_RECHARGE_AMOUNT, ERR_NUM_OF_OPERATORS_PER_VEHICLE } = require("../constants");
 
 class Vehicle extends Unit {
-  constructor(health, recharge, numOfOperators) {
+  constructor(health, recharge, numOfOperators, squadName) {
     if (recharge <= 1000) {
       throw new Error(ERR_VEHICLE_RECHARGE_AMOUNT);
     }
 
     if (numOfOperators < 1) {
-      console.log("GETS CALLED???");
       throw new Error(ERR_NUM_OF_OPERATORS_PER_VEHICLE);
     }
 
-    super(health, recharge);
+    super(health, recharge, "Vehicle", squadName);
 
     // List of soldiers
     this.operators = this.createOperators(numOfOperators);
@@ -30,7 +29,7 @@ class Vehicle extends Unit {
   createOperators(numOfOperators) {
     const operators = [];
     for (let i = 0; i < numOfOperators; i++)
-      operators.push(new Soldier(rnd(0, 100), rnd(100, 2000), rnd(0, 50)));
+      operators.push(new Soldier(rnd(0, 4), rnd(100, 2000), rnd(0, 50), this.squadName));
 
     return operators;
   }
@@ -52,12 +51,13 @@ class Vehicle extends Unit {
   receiveDamage(damageReceivedPerUnit) {
     const vehicleDmg = (30 / 100) * damageReceivedPerUnit;
 
+    super.receiveDamage(vehicleDmg);
+
     // We'll chose a random vehicle operator
     const singleVehicleOperatorDmg = (50 / 100) * damageReceivedPerUnit;
 
-    const otherOperatorsDmg = ((20 / 100) * damageReceivedPerUnit) / this.operators.length;
+    const restDmg = ((20 / 100) * damageReceivedPerUnit) / this.operators.length;
 
-    this.health = this.health - vehicleDmg;
     const randomOperatorIndex =
       this.operators.length > 1 ? Math.round(Math.random(0, this.operators.length - 1)) : 0;
 
@@ -65,10 +65,10 @@ class Vehicle extends Unit {
     this.operators[randomOperatorIndex].receiveDamage(singleVehicleOperatorDmg);
 
     if (this.operators.length > 1) {
-      this.operators.forEach(
-        (o, i) => i !== randomOperatorIndex && o.receiveDamage(otherOperatorsDmg)
-      );
-    } else this.health = this.health - otherOperatorsDmg;
+      this.operators.forEach((o, i) => i !== randomOperatorIndex && o.receiveDamage(restDmg));
+    } else {
+      super.receiveDamage(restDmg);
+    }
   }
 
   getAttackSuccessProbability() {
@@ -76,9 +76,16 @@ class Vehicle extends Unit {
     return 0.5 * (1 + this.health / 100) * gavg(operatorsSuccessRates);
   }
 
-  getDamage() {
+  getDamage(enemySquadName) {
     const sum = this.operators.reduce((acc, i) => i.experience / 100 + acc, 0);
-    return 0.1 + sum;
+    const dmg = 0.1 + sum;
+    // enemySquadName will be undefined for calls that only do 'damage checking' and not 'damage dealing'
+    if (enemySquadName !== undefined) {
+      console.log(
+        `===> Squad(${this.squadName}): Vehicle(${this.name}) did ${dmg} damage to Squad(${enemySquadName})!`
+      );
+    }
+    return dmg;
   }
 
   isActive() {

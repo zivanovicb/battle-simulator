@@ -40,4 +40,10 @@ describe("UnitModel", () => {
     jest.runOnlyPendingTimers();
     expect(u.isReady).toBe(true);
   });
+
+  test("receiveDamage sets health 0 if unit just got killed/destroyed and only decreases health if not", () => {
+    const u1 = new Unit(0.5, 1000);
+    u1.receiveDamage(5);
+    expect(u1.health).toBe(0);
+  });
 });

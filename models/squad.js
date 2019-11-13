@@ -1,10 +1,11 @@
 const Vehicle = require("./vehicle");
 const Soldier = require("./soldier");
+const randomWord = require("random-word");
 const gavg = require("../helpers/gavg");
 const { rnd } = require("../helpers/factories");
 const { ERR_NUM_OF_UNITS, ERR_STRATEGY_NUM } = require("../constants");
 
-const STATE_CHECK_INTERVAL_MS = 500;
+const STATE_CHECK_INTERVAL_MS = 1000;
 
 class Squad {
   constructor(numOfUnits, strategyNum) {
@@ -21,79 +22,39 @@ class Squad {
     // Interval gets set when squad starts fighting
     this.stateCheckInterval = null;
 
-    // List of both soldiers and vehicles
-    this.units = Squad.createUnits(numOfUnits);
     this.getTotalHealth = this.getTotalHealth.bind(this);
     this.getTotalExperience = this.getTotalExperience.bind(this);
     this.getAttackDamage = this.getAttackDamage.bind(this);
+    this.getAttackSuccessProbability = this.getAttackSuccessProbability.bind(this);
+    this.receiveDamage = this.receiveDamage.bind(this);
+    this.rechargeUnitsForNextAttack = this.rechargeUnitsForNextAttack.bind(this);
+    this.name = randomWord();
+
+    this.hasBeenActive = true;
+
+    // List of both soldiers and vehicles
+    this.units = Squad.createUnits(numOfUnits, this.name);
   }
 
-  static createUnits(numOfUnits) {
+  static createUnits(numOfUnits, squadName) {
     let units = [];
-    for (let i = 0; i < numOfUnits; i++) units.push(this.createUnit());
+    for (let i = 0; i < numOfUnits; i++) units.push(this.createUnit(squadName));
     return units;
   }
 
-  static createUnit() {
+  static createUnit(squadName) {
     // Return soldier
-    if (Math.random() > 0.5) return this.createSoldier();
+    if (Math.random() > 0.5) return Squad.createSoldier(squadName);
     // Return Vehicle
-    else return this.createVehicle();
+    else return this.createVehicle(squadName);
   }
 
-  static createVehicle() {
-    return new Vehicle(rnd(1, 100), rnd(1001, 2000), rnd(1, 3));
+  static createVehicle(squadName) {
+    return new Vehicle(rnd(1, 10), rnd(1001, 2000), rnd(1, 3), squadName);
   }
 
-  static createSoldier() {
-    return new Soldier(rnd(0, 100), rnd(100, 2000), rnd(0, 50));
-  }
-
-  isActive() {
-    return this.units.filter(u => u.isActive()).length > 0;
-  }
-
-  // The damage received on a successful attack is distributed evenly to all squad members
-  receiveDamage(totalDamageDealt) {
-    const damageReceivedPerUnit = totalDamageDealt / this.units.length;
-    console.log("[Squad.receiveDamage]", { damageReceivedPerUnit, unitsLength: this.units.length });
-    this.units.forEach(u => u.receiveDamage(damageReceivedPerUnit));
-  }
-
-  // The damage inflicted on a successful attack is the accumulation of the damage inflicted by each squad member
-  getAttackDamage() {
-    return this.units.reduce((acc, u) => u.getDamage() + acc, 0);
-  }
-
-  getTotalExperience() {
-    return this.units.reduce((acc, u) => {
-      if (!(u instanceof Vehicle)) return u.experience + acc;
-      else return u.operators.reduce((acc, o) => o.experience + acc, 0);
-    }, 0);
-  }
-
-  getTotalHealth() {
-    return this.units.reduce((acc, u) => u.health + acc, 0);
-  }
-
-  getAttackSuccessProbability() {
-    const chances = this.units.map(u => u.getAttackSuccessProbability());
-    return gavg(chances);
-  }
-
-  startFighting(enemySquads) {
-    console.log("[startFighting]", { enemySquads });
-    const allUnitsReady = this.units.filter(u => u.isReady).length === this.units.length;
-
-    this.stateCheckInterval = setInterval(() => {
-      if (this.isActive() && enemySquads.filter(s => s.isActive()).length > 0) {
-        console.log("GOING TO ATTAC", { allUnitsReady });
-        const a = this.getSquadToAttack(enemySquads);
-        console.log("OK I GOT SQUAD TO ATTAC", a);
-      } else {
-        console.log("[startFigthing] stopping interval");
-      }
-    }, STATE_CHECK_INTERVAL_MS);
+  static createSoldier(squadName) {
+    return new Soldier(rnd(0, 3), rnd(100, 2000), rnd(0, 50), squadName);
   }
 
   static getPoints(s) {
@@ -111,6 +72,87 @@ class Squad {
     return Squad.getSquadsWithPoints(enemySquads).sort((a, b) => b.points - a.points);
   }
 
+  isActive() {
+    const isActive = this.units.filter(u => u.isActive()).length > 0;
+    if (this.hasBeenActive && !isActive) console.log(`==> Squad(${this.name}) got destroyed!`);
+    this.hasBeenActive = isActive;
+    return isActive;
+  }
+
+  // The damage received on a successful attack is distributed evenly to all squad members
+  receiveDamage(totalDamageDealt) {
+    const activeUnitsLength = this.units.filter(u => u.isActive()).length;
+    const damageReceivedPerUnit = totalDamageDealt / activeUnitsLength;
+    console.log(`==> Squad(${this.name}) ${totalDamageDealt} damage received!`);
+    this.units.forEach(u => {
+      if (u.isActive()) u.receiveDamage(damageReceivedPerUnit);
+    });
+  }
+
+  // The damage inflicted on a successful attack is the accumulation of the damage inflicted by each squad member
+  // squadName will be undefined for calls that only do 'damage checking' and not 'damage dealing'
+  getAttackDamage(squadName) {
+    return this.units.reduce((acc, u) => u.getDamage(squadName) + acc, 0);
+  }
+
+  getTotalExperience() {
+    return this.units.reduce((acc, u) => {
+      if (!(u instanceof Vehicle)) return u.experience + acc;
+      else return u.operators.reduce((acc, o) => o.experience + acc, 0);
+    }, 0);
+  }
+
+  getTotalHealth() {
+    return this.units.reduce((acc, u) => u.health + acc, 0);
+  }
+
+  getAttackSuccessProbability(enemySquadName) {
+    const probability = gavg(this.units.map(u => u.getAttackSuccessProbability()));
+    console.log(
+      `==> Squad(${this.name}) Attack success probability towards Squad(${enemySquadName}) is ${probability}!`
+    );
+    return probability;
+  }
+
+  rechargeUnitsForNextAttack() {
+    this.units.forEach(u => u.rechargeForNextAttack());
+  }
+
+  fight(enemySquads) {
+    return new Promise(resolve => {
+      this.stateCheckInterval = setInterval(() => {
+        const allUnitsReady = this.units.filter(u => u.isReady).length === this.units.length;
+        const activeEnemySquads = enemySquads.filter(s => s.isActive());
+
+        if (this.isActive() && activeEnemySquads.length > 0) {
+          // All units recharged - going to attack
+          if (allUnitsReady) {
+            const s = this.getSquadToAttack(activeEnemySquads);
+
+            if (
+              this.getAttackSuccessProbability(s.name) > s.getAttackSuccessProbability(this.name)
+            ) {
+              const attackerDmgDealt = this.getAttackDamage(s.name);
+              console.log(
+                `==> Squad(${this.name}) did ${attackerDmgDealt} damage to Squad(${s.name})!`
+              );
+              s.receiveDamage(attackerDmgDealt);
+              this.rechargeUnitsForNextAttack();
+              s.rechargeUnitsForNextAttack();
+            }
+            // Units not ready, skipping
+          } else {
+            console.log(`==> Squad(${this.name}): Recharging...`);
+          }
+        } else {
+          clearInterval(this.stateCheckInterval);
+          // Simulation ends when all promises resolve
+          resolve();
+        }
+      }, STATE_CHECK_INTERVAL_MS);
+    });
+  }
+
   getSquadToAttack(enemySquads) {
     let squadToAttack;
 
@@ -119,7 +161,6 @@ class Squad {
     if (this.strategy === 1) {
       squadToAttack = sortedSquads[0];
     } else if (this.strategy === 2) {
-      console.log("CHOOSING WEAKEST", { sortedSquads });
       squadToAttack = sortedSquads[enemySquads.length - 1];
     } else if (this.strategy === 3) {
       const randomSquadIndex =

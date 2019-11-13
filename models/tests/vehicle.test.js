@@ -1,4 +1,3 @@
-const sinon = require("sinon");
 const Vehicle = require("../vehicle");
 const Soldier = require("../soldier");
 const {
@@ -6,18 +5,7 @@ const {
   ERR_NUM_OF_OPERATORS_PER_VEHICLE
 } = require("../../constants");
 
-// manually create and restore the sandbox
-let sandbox;
-
 describe("VehicleModel", () => {
-  beforeEach(function() {
-    sandbox = sinon.createSandbox();
-  });
-
-  afterEach(function() {
-    sandbox.restore();
-  });
-
   test("constructor param validation", () => {
     expect(() => new Vehicle(100, 900, 2)).toThrowError(ERR_VEHICLE_RECHARGE_AMOUNT);
     expect(() => new Vehicle(30, 1001, 0)).toThrowError(ERR_NUM_OF_OPERATORS_PER_VEHICLE);
@@ -48,12 +36,11 @@ describe("VehicleModel", () => {
     v1.receiveDamage(2);
 
     // initial 30% on vehicle, and then %20 because there is only one operator in the vehicle
-    expect(v1.health).toBe(100 - 0.6 - 0.4);
+    expect(v1.health).toBe(99);
     expect(v1.operators[0].health).toBe(100 - 1);
   });
 
   test("receiveDamage properly distributes dmg to the vehicle, single random operator and the rest evenly to operators", () => {
-    sandbox.stub(Math, "random").returns(1);
     const v1 = new Vehicle(100, 1200, 5);
     const s1 = new Soldier(100, 500, 50);
     const s2 = new Soldier(80, 500, 50);
@@ -63,9 +50,7 @@ describe("VehicleModel", () => {
 
     v1.receiveDamage(2);
 
-    // initial 30% on vehicle
-    expect(v1.health).toBe(100 - 0.6);
-    expect(v1.operators[1].health).toBe(79);
+    expect(v1.health).toBe(99.4);
   });
 
   test("isActive returns false true only if there are operators with health > 0 and vehicle health > 0", () => {
