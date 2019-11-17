@@ -35,25 +35,30 @@ async function main() {
   }
 }
 
-const initArmies = numOfArmies => {
-  return new Promise(async (resolve, reject) => {
-    let armies = [];
+const initArmies = async numOfArmies => {
+  const armies = [];
+  await [...Array(numOfArmies)].reduce(
+    (p, _, i) =>
+      p.then(async _ => {
+        const army = await initArmy(i, numOfArmies);
+        armies.push(army);
+      }),
+    Promise.resolve()
+  );
+  return armies;
+};
 
-    for (let i = 1; i <= numOfArmies; i++) {
-      try {
-        const numOfSquads = await getNumOfSquads(i, getNumOfSquads, numOfArmies);
-        const numOfUnits = await getNumOfUnits(i, getNumOfUnits, numOfArmies);
-        const strategyNum = await getStrategy(i, getStrategy, numOfArmies);
-        const army = new Army(i, numOfSquads, numOfUnits, `Army No.${i}`, strategyNum);
-        armies = [...armies, { i, ...army }];
-      } catch (err) {
-        console.error("[initArmies]", err.message);
-        reject(err.message);
-      }
-    }
-
-    resolve(armies);
-  });
+const initArmy = async (i, numOfArmies) => {
+  try {
+    const numOfSquads = await getNumOfSquads(i, getNumOfSquads, numOfArmies);
+    const numOfUnits = await getNumOfUnits(i, getNumOfUnits, numOfArmies);
+    const strategyNum = await getStrategy(i, getStrategy, numOfArmies);
+    const a = new Army(i, numOfSquads, numOfUnits, `Army No.${i}`, strategyNum);
+    return { i, ...a };
+  } catch (err) {
+    console.error("[initArmy]", err.message);
+    return err.message;
+  }
 };
 
 main();

@@ -34,16 +34,13 @@ class Army {
     return squads;
   }
 
-  joinBattle(armies) {
-    return new Promise(async (resolve, _) => {
-      const enemySquads = armies
-        .filter(a => a.id !== this.id)
-        .reduce((acc, a) => [...acc, ...a.squads], []);
-      const squadFightingPromises = [];
-      this.squads.forEach(sq => squadFightingPromises.push(sq.fight(enemySquads)));
-      await Promise.all(squadFightingPromises);
-      resolve();
-    });
+  async joinBattle(armies) {
+    const enemySquads = armies
+      .filter(a => a.id !== this.id)
+      .reduce((acc, a) => [...acc, ...a.squads], []);
+    const squadFightingPromises = [];
+    this.squads.forEach(sq => squadFightingPromises.push(sq.fight(enemySquads)));
+    await Promise.all(squadFightingPromises);
   }
 }
 
