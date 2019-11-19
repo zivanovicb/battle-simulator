@@ -2,7 +2,6 @@
   Battle simulator
 </p>
 
-<hr />
 
 [![PRs Welcome][prs-badge]][prs]
 
@@ -23,6 +22,13 @@ git clone https://github.com/zivanovicb1/battle-simulator
 
 ### Tests
 1. Run `yarn test` or `npm test`
+
+[prs-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
+[prs]: http://makeapullrequest.com
+
+### Generate docs
+1. Run `yarn run docs` or `npm run docs`
+
 
 [prs-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
 [prs]: http://makeapullrequest.com
