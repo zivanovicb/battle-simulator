@@ -1,5 +1,4 @@
 const Soldier = require("../soldier");
-const sinon = require("sinon");
 const factories = require("../../helpers/factories");
 
 describe("SoldierModel", () => {

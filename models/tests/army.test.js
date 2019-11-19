@@ -29,7 +29,7 @@ describe("ArmyModel", () => {
     expect(a.strategy).toBe(strategyNum);
   });
 
-  test("can create list of squads", () => {
+  test("can create array of squads", () => {
     const name = "Army No.1";
     const strategyNum = 1;
     const squadsNum = 3;

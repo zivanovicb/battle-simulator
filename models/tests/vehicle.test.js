@@ -1,4 +1,3 @@
-const sinon = require("sinon");
 const Vehicle = require("../vehicle");
 const Soldier = require("../soldier");
 const {
@@ -24,8 +23,12 @@ describe("VehicleModel", () => {
   });
 
   test("constructor param validation", () => {
-    expect(() => new Vehicle(100, 900, 2)).toThrowError(ERR_VEHICLE_RECHARGE_AMOUNT);
-    expect(() => new Vehicle(30, 1001, 0)).toThrowError(ERR_NUM_OF_OPERATORS_PER_VEHICLE);
+    expect(() => new Vehicle(100, 900, 2)).toThrowError(
+      ERR_VEHICLE_RECHARGE_AMOUNT
+    );
+    expect(() => new Vehicle(30, 1001, 0)).toThrowError(
+      ERR_NUM_OF_OPERATORS_PER_VEHICLE
+    );
   });
 
   test("can be instanciated", () => {
