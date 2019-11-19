@@ -7,7 +7,27 @@ const { ERR_NUM_OF_UNITS, ERR_STRATEGY_NUM } = require("../constants");
 
 const STATE_CHECK_INTERVAL_MS = 1000;
 
+/**
+ * @typedef { 1 | 2 | 3 } StrategyNumber
+ */
+
+/**
+ * @typedef {object} SquadWithPoints
+ * @extends Squad
+ * @property {number} points
+ */
+
+/**
+ * Class representing a squad.
+ * @extends Unit
+ */
+
 class Squad {
+  /**
+   * Create a squad.
+   * @param {number} numOfUnits - Number of units per squad
+   * @param {StrategyNumber} strategyNum - Strategy number(1 - strongest, 2 - weakest, 3 - random)
+   */
   constructor(numOfUnits, strategyNum) {
     if (numOfUnits < 5 || numOfUnits > 10) {
       throw new Error(ERR_NUM_OF_UNITS);
@@ -32,16 +52,26 @@ class Squad {
 
     this.hasBeenActive = true;
 
-    // List of both soldiers and vehicles
+    // Array of both soldiers and vehicles
     this.units = Squad.createUnits(numOfUnits, this.name);
   }
 
+  /**
+   * Create an array of units(both vehicles and soldiers)
+   * @param {number} numOfUnits - Number of units per squad
+   * @param {string} squadName - Squad name
+   */
   static createUnits(numOfUnits, squadName) {
     let units = [];
     for (let i = 0; i < numOfUnits; i++) units.push(this.createUnit(squadName));
     return units;
   }
 
+  /**
+   * Randomly create unit.
+   * @param {string} squadName - Squad name
+   * @return {Soldier|Vehicle} - Soldier or Vehicle object
+   */
   static createUnit(squadName) {
     // Return soldier
     if (factories.rnd(0, 1) > 0.5) return Squad.createSoldier(squadName);
@@ -49,6 +79,11 @@ class Squad {
     else return Squad.createVehicle(squadName);
   }
 
+  /**
+   * Create vehicle.
+   * @param {string} squadName - Squad name
+   * @return {Vehicle} Vehicle object
+   */
   static createVehicle(squadName) {
     return new Vehicle(
       factories.rnd(1, 100),
@@ -58,6 +93,12 @@ class Squad {
     );
   }
 
+  /**
+   * Create soldier.
+   * @static
+   * @param {string} squadName - Squad name
+   * @return {Soldier} Soldier object
+   */
   static createSoldier(squadName) {
     return new Soldier(
       factories.rnd(1, 100),
@@ -67,10 +108,22 @@ class Squad {
     );
   }
 
+  /**
+   * Calculate the squad's strength points which is sum of the squad's total health, experience & attack damage.
+   * @static
+   * @param {Squad} s - Squad object
+   * @return {number} Soldier object
+   */
   static getPoints(s) {
     return s.getTotalHealth() + s.getTotalExperience() + s.getAttackDamage();
   }
 
+  /**
+   * Map plain Squad objects to the Squads with points
+   * @static
+   * @param {Squad[]} enemySquads - Array of squads
+   * @return {SquadWithPoints[]} Array of squad with points objects
+   */
   static getSquadsWithPoints(enemySquads) {
     return enemySquads.map(s => ({
       ...s,
@@ -78,10 +131,20 @@ class Squad {
     }));
   }
 
+  /**
+   * Sort squads from strongest to weakest based on strength points.
+   * @static
+   * @param {Squad[]} enemySquads - Array of squads
+   * @return {SquadWithPoints[]} Array of squad with points objects
+   */
   static sortSquadsByPoints(enemySquads) {
     return Squad.getSquadsWithPoints(enemySquads).sort((a, b) => b.points - a.points);
   }
 
+  /**
+   * Check if squad is active. A squad is active as long as is contains an active unit.
+   * @return {boolean}
+   */
   isActive() {
     const isActive = this.units.filter(u => u.isActive()).length > 0;
     if (this.hasBeenActive && !isActive) console.log(`==> Squad(${this.name}) got destroyed!`);
@@ -89,7 +152,10 @@ class Squad {
     return isActive;
   }
 
-  // The damage received on a successful attack is distributed evenly to all squad members
+  /**
+   * The damage received on a successful attack is distributed evenly to all squad members.
+   * @param {number} totalDamageDealt
+   */
   receiveDamage(totalDamageDealt) {
     const activeUnitsLength = this.units.filter(u => u.isActive()).length;
     const damageReceivedPerUnit = totalDamageDealt / activeUnitsLength;
@@ -99,14 +165,26 @@ class Squad {
     });
   }
 
+  /**
+   * Get squad's attack damage which is the accumulation of each unit's attack damage.
+   * @return {number}
+   */
   getAttackDamage() {
     return this.units.reduce((acc, u) => u.getDamage() + acc, 0);
   }
 
+  /**
+   * Calls checkDamage method for each unit in squad.
+   * @param {string} squadName - Squad name
+   */
   checkAttackDamage(squadName) {
     this.units.forEach(u => u.checkDamage(squadName));
   }
 
+  /**
+   * Get total squad's experience which is the accumulation of all experience in the squad(soldiers + vehicle operators).
+   * @return {number}
+   */
   getTotalExperience() {
     return this.units.reduce((acc, u) => {
       if (!(u instanceof Vehicle)) return u.experience + acc;
@@ -114,10 +192,20 @@ class Squad {
     }, 0);
   }
 
+  /**
+   * Get total squad's health which is the accumulation of all health in squad(soldiers + vehicles).
+   * @return {number}
+   */
   getTotalHealth() {
     return this.units.reduce((acc, u) => u.health + acc, 0);
   }
 
+  /**
+   * Get attack success probability.
+   * The attack success probability of a squad is determined as the geometric average of the attack success probability of each member.
+   * @param {string} enemySquadName
+   * @return {number}
+   */
   getAttackSuccessProbability(enemySquadName) {
     const probability = gavg(this.units.map(u => u.getAttackSuccessProbability()));
     console.log(
@@ -126,10 +214,18 @@ class Squad {
     return probability;
   }
 
+  /**
+   * Make all units start recharging.
+   */
   rechargeUnitsForNextAttack() {
     this.units.forEach(u => u.rechargeForNextAttack());
   }
-
+  /**
+   * Start fighting enemy squads.
+   * Promise will resolve once squad is destroyed or there are no enemy squads left.
+   * @param {Squad[]} enemySquads
+   * @returns {Promise<undefined>}
+   */
   fight(enemySquads) {
     return new Promise(resolve => {
       this.stateCheckInterval = setInterval(() => {
@@ -150,7 +246,7 @@ class Squad {
                 `==> Squad(${this.name}) did ${attackerDmgDealt} damage to Squad(${s.name})!`
               );
 
-              // Logs individual attack towards defending squad
+              // Logs each units individual attack towards defending squad
               this.checkAttackDamage(s.name);
 
               s.receiveDamage(attackerDmgDealt);
@@ -170,6 +266,13 @@ class Squad {
     });
   }
 
+  /**
+   * Get squad to attack. Each time a squad attacks it must choose a target squad, depending on the chosen strategy.
+   * Squads with 'strongest(1)' strategy will attack the strongest non-ally squad.
+   * Squads with 'weakest(2)' strategy will attack the weakest non-ally squad.
+   * Squads with 'random(3)' strategy will attack any random squad.
+   * @param {Squad[]} enemySquads
+   */
   getSquadToAttack(enemySquads) {
     let squadToAttack;
 
