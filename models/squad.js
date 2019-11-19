@@ -2,7 +2,7 @@ const Vehicle = require("./vehicle");
 const Soldier = require("./soldier");
 const randomWord = require("random-word");
 const gavg = require("../helpers/gavg");
-const { rnd } = require("../helpers/factories");
+const factories = require("../helpers/factories");
 const { ERR_NUM_OF_UNITS, ERR_STRATEGY_NUM } = require("../constants");
 
 const STATE_CHECK_INTERVAL_MS = 1000;
@@ -44,17 +44,27 @@ class Squad {
 
   static createUnit(squadName) {
     // Return soldier
-    if (Math.random() > 0.5) return Squad.createSoldier(squadName);
+    if (factories.rnd(0, 1) > 0.5) return Squad.createSoldier(squadName);
     // Return Vehicle
-    else return this.createVehicle(squadName);
+    else return Squad.createVehicle(squadName);
   }
 
   static createVehicle(squadName) {
-    return new Vehicle(rnd(1, 100), rnd(1001, 2000), rnd(1, 3), squadName);
+    return new Vehicle(
+      factories.rnd(1, 100),
+      factories.rnd(1001, 2000),
+      factories.rnd(1, 3),
+      squadName
+    );
   }
 
   static createSoldier(squadName) {
-    return new Soldier(rnd(1, 100), rnd(100, 2000), rnd(0, 50), squadName);
+    return new Soldier(
+      factories.rnd(1, 100),
+      factories.rnd(100, 2000),
+      factories.rnd(0, 50),
+      squadName
+    );
   }
 
   static getPoints(s) {
@@ -89,10 +99,12 @@ class Squad {
     });
   }
 
-  // The damage inflicted on a successful attack is the accumulation of the damage inflicted by each squad member
-  // squadName will be undefined for calls that only do 'damage checking' and not 'damage dealing'
-  getAttackDamage(squadName) {
-    return this.units.reduce((acc, u) => u.getDamage(squadName) + acc, 0);
+  getAttackDamage() {
+    return this.units.reduce((acc, u) => u.getDamage() + acc, 0);
+  }
+
+  checkAttackDamage(squadName) {
+    this.units.forEach(u => u.checkDamage(squadName));
   }
 
   getTotalExperience() {
@@ -132,13 +144,18 @@ class Squad {
             if (
               this.getAttackSuccessProbability(s.name) > s.getAttackSuccessProbability(this.name)
             ) {
-              const attackerDmgDealt = this.getAttackDamage(s.name);
+              const attackerDmgDealt = this.getAttackDamage();
+
               console.log(
                 `==> Squad(${this.name}) did ${attackerDmgDealt} damage to Squad(${s.name})!`
               );
+
+              // Logs individual attack towards defending squad
+              this.checkAttackDamage(s.name);
+
               s.receiveDamage(attackerDmgDealt);
-              this.rechargeUnitsForNextAttack();
               s.rechargeUnitsForNextAttack();
+              this.rechargeUnitsForNextAttack();
             }
             // Units not ready, skipping
           } else {
@@ -164,7 +181,7 @@ class Squad {
       squadToAttack = sortedSquads[enemySquads.length - 1];
     } else if (this.strategy === 3) {
       const randomSquadIndex =
-        enemySquads.length > 1 ? Math.round(Math.random(0, enemySquads.length - 1)) : 0;
+        enemySquads.length > 1 ? Math.round(factories.rnd(0, enemySquads.length - 1)) : 0;
 
       squadToAttack = sortedSquads[randomSquadIndex];
     }

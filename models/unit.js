@@ -31,23 +31,19 @@ class Unit {
     return this.health > 0;
   }
 
-  hasJustDied(currentHealth, dmgDealt) {
-    const hasJustDied = currentHealth > 0 && currentHealth - dmgDealt <= 0;
-    if (hasJustDied) {
+  receiveDamage(dmg) {
+    if (this.health <= 0) return;
+
+    console.log(
+      `===> Squad(${this.squadName}): ${this.type} (${this.name}) received ${dmg} damage. ${this.health} health left!`
+    );
+
+    this.health = Math.max(0, this.health - dmg);
+    if (this.health === 0) {
       console.log(
         `===> Squad(${this.squadName}): ${this.type}(${this.name}) just got killed/destroyed!`
       );
     }
-    return hasJustDied;
-  }
-
-  receiveDamage(dmg) {
-    if (this.health <= 0) return;
-    const hasJustDied = this.hasJustDied(this.health, dmg);
-    this.health = hasJustDied ? 0 : this.health - dmg;
-    console.log(
-      `===> Squad(${this.squadName}): ${this.type} (${this.name}) received ${dmg} damage. ${this.health} health left!`
-    );
   }
 }
 

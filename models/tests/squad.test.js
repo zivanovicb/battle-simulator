@@ -1,6 +1,8 @@
-const sinon = require("sinon");
 const Squad = require("../squad");
+const Soldier = require("../soldier");
+const Vehicle = require("../vehicle");
 const { ERR_NUM_OF_UNITS, ERR_STRATEGY_NUM } = require("../../constants");
+const factories = require("../../helpers/factories");
 
 describe("SquadModel", () => {
   test("constructor param validation", () => {
@@ -64,26 +66,28 @@ describe("SquadModel", () => {
     expect(sq.units[1].health).toBe(30 - perUnitDamageReceived);
   });
 
-  // test("computes attackSuccessProbability", () => {
-  //   const sq = new Squad(5, 3);
-  //   const s1 = Squad.createSoldier();
-  //   const s2v1 = Squad.createSoldier();
+  test("computes attackSuccessProbability", () => {
+    const sq = new Squad(5, 3);
+    const s1 = Squad.createSoldier();
+    const s2v1 = Squad.createSoldier();
 
-  //   s1.health = 30;
-  //   s1.experience = 30;
+    s1.health = 30;
+    s1.experience = 30;
 
-  //   const v1 = Squad.createVehicle();
+    const v1 = Squad.createVehicle();
 
-  //   s2v1.health = 50;
-  //   s2v1.experience = 50;
-  //   v1.operators = [s2v1];
+    s2v1.health = 50;
+    s2v1.experience = 50;
 
-  //   sq.units = [s1, v1];
+    v1.operators = [s2v1];
+    v1.health = 30;
 
-  //   sinon.stub(Math, "random").returns(4);
+    sq.units = [s1, v1];
 
-  //   expect(sq.getAttackSuccessProbability()).toBe(0.003315425155194166);
-  // });
+    const rndSpy = jest.spyOn(factories, "rnd").mockImplementation(() => 4);
+    expect(sq.getAttackSuccessProbability()).toBe(0.022516660498395406);
+    rndSpy.mockRestore();
+  });
 
   test("computes attackDamage", () => {
     const sq = new Squad(5, 3);
@@ -252,5 +256,86 @@ describe("SquadModel", () => {
     const random = new Squad(6, 3);
 
     expect(random.getSquadToAttack([strongest, strongest2, weakest2, weakest])).not.toBe(undefined);
+  });
+
+  test("can create unit", () => {
+    let rndSpy = jest.spyOn(factories, "rnd").mockImplementationOnce(() => 4);
+
+    const u1 = Squad.createUnit("randomSquadName");
+    expect(u1 instanceof Soldier).toBe(true);
+    rndSpy.mockRestore();
+
+    rndSpy = jest.spyOn(factories, "rnd").mockImplementationOnce(() => 0.1);
+    const u2 = Squad.createUnit("randomSquadName");
+    expect(u2 instanceof Vehicle).toBe(true);
+    rndSpy.mockRestore();
+  });
+
+  test("can make all units recharge", () => {
+    const sq = new Squad(5, 3);
+    const s1 = Squad.createSoldier();
+    const s2v1 = Squad.createSoldier();
+
+    s1.health = 30;
+    s1.experience = 30;
+
+    const v1 = Squad.createVehicle();
+
+    s2v1.health = 50;
+    s2v1.experience = 50;
+
+    v1.operators = [s2v1];
+    v1.health = 30;
+
+    sq.units = [s1, v1];
+
+    s1.rechargeForNextAttack = jest.fn();
+    v1.rechargeForNextAttack = jest.fn();
+
+    sq.rechargeUnitsForNextAttack();
+    expect(s1.rechargeForNextAttack).toHaveBeenCalledTimes(1);
+    expect(v1.rechargeForNextAttack).toHaveBeenCalledTimes(1);
+  });
+
+  // test("can create vehicle", () => {
+  //   let rndSpy = jest
+  //     .spyOn(factories, "rnd")
+  //     .mockImplementationOnce(() => 80)
+  //     .mockImplementationOnce(() => 1200)
+  //     .mockImplementationOnce(() => 2);
+
+  //   const v1 = Squad.createVehicle("idkSquad");
+
+  //   expect(v1 instanceof Vehicle).toBe(true);
+  //   expect(v1.squadName).toBe("idkSquad");
+  //   expect(v1.operators.length).toBe(2);
+  //   expect(v1.recharge).toBe(1200);
+  //   rndSpy.mockRestore();
+  // });
+
+  test("can log how much damage has been done by each unit", () => {
+    const sq = new Squad(5, 3);
+    const s1 = Squad.createSoldier();
+    const s2v1 = Squad.createSoldier();
+
+    s1.health = 30;
+    s1.experience = 30;
+
+    const v1 = Squad.createVehicle();
+
+    s2v1.health = 50;
+    s2v1.experience = 50;
+
+    v1.operators = [s2v1];
+    v1.health = 30;
+
+    sq.units = [s1, v1];
+
+    s1.checkDamage = jest.fn();
+    v1.checkDamage = jest.fn();
+
+    sq.checkAttackDamage("idkSquad");
+    expect(s1.checkDamage).toHaveBeenCalledTimes(1);
+    expect(v1.checkDamage).toHaveBeenCalledTimes(1);
   });
 });

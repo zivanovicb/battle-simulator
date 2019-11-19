@@ -59,7 +59,7 @@ class Vehicle extends Unit {
     const restDmg = ((20 / 100) * damageReceivedPerUnit) / this.operators.length;
 
     const randomOperatorIndex =
-      this.operators.length > 1 ? Math.round(Math.random(0, this.operators.length - 1)) : 0;
+      this.operators.length > 1 ? Math.round(rnd(0, this.operators.length - 1)) : 0;
 
     // Random vehicle operator receives 50% of the total damage dealt to a unit
     this.operators[randomOperatorIndex].receiveDamage(singleVehicleOperatorDmg);
@@ -76,16 +76,17 @@ class Vehicle extends Unit {
     return 0.5 * (1 + this.health / 100) * gavg(operatorsSuccessRates);
   }
 
-  getDamage(enemySquadName) {
+  getDamage() {
     const sum = this.operators.reduce((acc, i) => i.experience / 100 + acc, 0);
     const dmg = 0.1 + sum;
-    // enemySquadName will be undefined for calls that only do 'damage checking' and not 'damage dealing'
-    if (enemySquadName !== undefined) {
-      console.log(
-        `===> Squad(${this.squadName}): Vehicle(${this.name}) did ${dmg} damage to Squad(${enemySquadName})!`
-      );
-    }
     return dmg;
+  }
+
+  checkDamage(enemySquadName) {
+    const dmg = this.getDamage();
+    console.log(
+      `===> Squad(${this.squadName}): Vehicle(${this.name}) did ${dmg} damage to Squad(${enemySquadName})!`
+    );
   }
 
   isActive() {

@@ -1,5 +1,6 @@
 const Unit = require("./unit");
 const { ERR_EXPERIENCE_AMOUNT } = require("../constants");
+const factories = require("../helpers/factories");
 
 class Soldier extends Unit {
   constructor(health, recharge, experience, squadName) {
@@ -17,19 +18,19 @@ class Soldier extends Unit {
   }
 
   getAttackSuccessProbability() {
-    return (0.5 * (1 + this.health / 100) * Math.random(30 + this.experience, 100)) / 100;
+    return (0.5 * (1 + this.health / 100) * factories.rnd(30 + this.experience, 100)) / 100;
   }
 
-  // enemySquadName will be undefined for calls that only do 'damage checking' and not 'damage dealing'
-  getDamage(enemySquadName) {
+  getDamage() {
     const dmg = 0.05 + this.experience / 100;
-    if (enemySquadName !== undefined) {
-      console.log(
-        `===> Squad(${this.squadName}): Soldier(${this.name}) did ${dmg} damage to Squad(${enemySquadName})!`
-      );
-    }
-
     return dmg;
+  }
+
+  checkDamage(enemySquadName) {
+    const dmg = this.getDamage();
+    console.log(
+      `===> Squad(${this.squadName}): Soldier(${this.name}) did ${dmg} damage to Squad(${enemySquadName})!`
+    );
   }
 }
 
