@@ -68,11 +68,11 @@ describe("parseNumOfSquads", () => {
 });
 
 describe("getNumOfSquads", () => {
-  test("should call getNumOfSquads again if input is wrong", async () => {
-    const fn = jest.fn();
-    await getNumOfSquads(1, fn, 3, "wrong input");
-    expect(fn).toHaveBeenCalledTimes(1);
-  });
+  // test("should call getNumOfSquads again if input is wrong", async () => {
+  //   const fn = jest.fn();
+  //   await getNumOfSquads(1, fn, 3, "wrong input");
+  //   expect(fn).toHaveBeenCalledTimes(1);
+  // });
 
   test("should NOT call getNumOfSquads again if input is ok (5)", async () => {
     const fn = jest.fn();
@@ -106,11 +106,11 @@ describe("parseNumOfUnits", () => {
 });
 
 describe("getNumOfUnits", () => {
-  test("should call getNumOfUnits again if input is wrong", async () => {
-    const fn = jest.fn();
-    await getNumOfUnits(1, fn, 3, "wrong input");
-    expect(fn).toHaveBeenCalledTimes(1);
-  });
+  // test("should call getNumOfUnits again if input is wrong", async () => {
+  //   const fn = jest.fn();
+  //   await getNumOfUnits(1, fn, 3, "wrong input");
+  //   expect(fn).toHaveBeenCalledTimes(1);
+  // });
 
   test("should NOT call getNumOfSquads again if input is ok (7)", async () => {
     const fn = jest.fn();
