@@ -50,9 +50,9 @@ const initArmies = async numOfArmies => {
 
 const initArmy = async (i, numOfArmies) => {
   try {
-    const numOfSquads = await getNumOfSquads(i, getNumOfSquads, numOfArmies);
-    const numOfUnits = await getNumOfUnits(i, getNumOfUnits, numOfArmies);
-    const strategyNum = await getStrategy(i, getStrategy, numOfArmies);
+    const numOfSquads = await getNumOfSquads(i, numOfArmies);
+    const numOfUnits = await getNumOfUnits(i, numOfArmies);
+    const strategyNum = await getStrategy(i, numOfArmies);
     const a = new Army(i, numOfSquads, numOfUnits, `Army No.${i}`, strategyNum);
     return { i, ...a };
   } catch (err) {

@@ -27,7 +27,7 @@ const getNumOfArmies = async (getNumOfArmies, numOfArmies) => {
 };
 
 // Gets input from stdin, does validation and gets called recursively if input is wrong
-const getNumOfSquads = async (i, getNumOfSquads, numOfArmies, numOfSquads) => {
+const getNumOfSquads = async (i, numOfArmies, numOfSquads) => {
   let finalNumOfSquads;
 
   if (numOfSquads === undefined) {
@@ -44,12 +44,12 @@ const getNumOfSquads = async (i, getNumOfSquads, numOfArmies, numOfSquads) => {
   } catch (err) {
     console.log(`Error: ${err.message}. Please try again!`);
     // Recursion
-    return getNumOfSquads(i, getNumOfSquads, numOfArmies);
+    return getNumOfSquads(i, numOfArmies);
   }
 };
 
 // Gets input from stdin, does validation and gets called recursively if input is wrong
-const getNumOfUnits = async (i, getNumOfUnits, numOfArmies, numOfUnits) => {
+const getNumOfUnits = async (i, numOfArmies, numOfUnits) => {
   let finalNumOfUnits;
 
   if (numOfUnits === undefined) {
@@ -67,7 +67,7 @@ const getNumOfUnits = async (i, getNumOfUnits, numOfArmies, numOfUnits) => {
   } catch (err) {
     console.log(`Error: ${err.message}. Please try again!`);
     // Recursion
-    return getNumOfUnits(i, getNumOfUnits, numOfArmies);
+    return getNumOfUnits(i, numOfArmies);
   }
 };
 
